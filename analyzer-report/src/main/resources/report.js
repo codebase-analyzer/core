@@ -289,6 +289,19 @@ function toggleLocations(header) {
   }
 }
 
+// Auto-fix diffs (B6) — same toggle pattern but flips a div, not a table.
+function toggleFixes(header) {
+  var content = header.nextElementSibling;
+  var toggle = header.querySelector('.fixes-toggle');
+  if (content.style.display === 'none') {
+    content.style.display = 'block';
+    if (toggle) toggle.classList.add('open');
+  } else {
+    content.style.display = 'none';
+    if (toggle) toggle.classList.remove('open');
+  }
+}
+
 function filterByIssueType(select) {
   var section = select.closest('.category-section');
   var catName = section.getAttribute('data-category');

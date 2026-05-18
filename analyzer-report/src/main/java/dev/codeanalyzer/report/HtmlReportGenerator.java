@@ -9,6 +9,7 @@ import dev.codeanalyzer.core.analyzer.dependencies.FrameworkRegistry;
 import dev.codeanalyzer.core.analyzer.migration.MigrationScore;
 import dev.codeanalyzer.core.analyzer.prioritization.PrioritizedFinding;
 import dev.codeanalyzer.core.analyzer.prioritization.TechDebt;
+import dev.codeanalyzer.core.autofix.Patch;
 import dev.codeanalyzer.core.suppression.BaselineSnapshot;
 import dev.codeanalyzer.core.model.AnalysisResult;
 import dev.codeanalyzer.core.model.AnalysisStats;
@@ -1427,8 +1428,9 @@ public class HtmlReportGenerator {
                 byTitle.computeIfAbsent(f.getTitle(), k -> new ArrayList<>()).add(f);
             }
 
+            Map<Finding, Patch> availableFixes = result.getAvailableFixes();
             for (Map.Entry<String, List<Finding>> group : byTitle.entrySet()) {
-                appendFindingGroup(html, group.getKey(), group.getValue());
+                appendFindingGroup(html, group.getKey(), group.getValue(), availableFixes);
             }
 
             html.append("  </div>\n");
@@ -1459,9 +1461,18 @@ public class HtmlReportGenerator {
         html.append("</div>\n");
     }
 
-    private void appendFindingGroup(StringBuilder html, String title, List<Finding> findings) {
+    private void appendFindingGroup(StringBuilder html, String title, List<Finding> findings,
+                                    Map<Finding, Patch> availableFixes) {
         Finding first = findings.get(0);
         String sevClass = first.getSeverity().name().toLowerCase();
+
+        // Count how many findings in this group have an auto-fix patch.
+        int fixCount = 0;
+        if (availableFixes != null && !availableFixes.isEmpty()) {
+            for (Finding f : findings) {
+                if (availableFixes.containsKey(f)) fixCount++;
+            }
+        }
 
         // Build searchable text from all locations in the group
         StringBuilder searchText = new StringBuilder();
@@ -1489,6 +1500,17 @@ public class HtmlReportGenerator {
         html.append("        <span class=\"conf-badge conf-").append(confClass)
                 .append("\" title=\"Analyzer confidence this finding is real\">")
                 .append(groupConfidence.name()).append("</span>\n");
+        if (fixCount > 0) {
+            // Pick the highest confidence among the patches for the badge tier.
+            Patch.Confidence patchConf = highestPatchConfidence(findings, availableFixes);
+            String patchConfClass = patchConf.name().toLowerCase().replace('_', '-');
+            html.append("        <span class=\"fix-badge fix-").append(patchConfClass)
+                    .append("\" title=\"Auto-fix patch available for ").append(fixCount)
+                    .append(" of ").append(findings.size()).append(" occurrence(s)\">")
+                    .append("&#x1F527; FIX AVAILABLE")
+                    .append(fixCount < findings.size() ? " (" + fixCount + ")" : "")
+                    .append("</span>\n");
+        }
         html.append("        <span class=\"finding-title\">").append(escHtml(title)).append("</span>\n");
         html.append("        <span class=\"finding-count\">").append(findings.size())
                 .append(findings.size() == 1 ? " occurrence" : " occurrences").append("</span>\n");
@@ -1519,6 +1541,46 @@ public class HtmlReportGenerator {
             html.append("      <div class=\"finding-suggestion\" data-modes=\"dev\">\n");
             html.append("        <div class=\"example-tag suggestion-tag\">Example fix — apply the same pattern to all impacted classes below</div>\n");
             html.append("        ").append(formatSuggestion(example.getSuggestion())).append("\n");
+            html.append("      </div>\n");
+        }
+
+        // Auto-fix patches (dev mode only). Shows the unified diff for each
+        // finding in the group that has an available patch. Collapsed by default
+        // so the per-finding details only render when a developer wants them.
+        if (fixCount > 0) {
+            html.append("      <div class=\"finding-fixes\" data-modes=\"dev\">\n");
+            html.append("        <div class=\"fixes-header\" onclick=\"toggleFixes(this)\">\n");
+            html.append("          <span class=\"fixes-toggle\">&#9654;</span>\n");
+            html.append("          &#x1F527; Auto-fix patches (").append(fixCount)
+                    .append(") &mdash; click to show diffs\n");
+            html.append("        </div>\n");
+            html.append("        <div class=\"fixes-content\" style=\"display:none\">\n");
+            int rendered = 0;
+            for (Finding f : findings) {
+                Patch p = availableFixes != null ? availableFixes.get(f) : null;
+                if (p == null) continue;
+                rendered++;
+                String patchConfClass = p.getConfidence().name().toLowerCase().replace('_', '-');
+                html.append("          <div class=\"fix-patch\">\n");
+                html.append("            <div class=\"fix-patch-header\">\n");
+                html.append("              <span class=\"fix-conf fix-").append(patchConfClass).append("\">")
+                        .append(p.getConfidence().name().replace('_', ' ')).append("</span>\n");
+                html.append("              <span class=\"fix-desc\">").append(escHtml(p.getDescription())).append("</span>\n");
+                html.append("              <span class=\"fix-loc\"><code>").append(escHtml(p.getDisplayPath()))
+                        .append(":").append(p.getStartLine()).append("</code></span>\n");
+                html.append("            </div>\n");
+                html.append("            <pre class=\"diff\"><code>");
+                html.append(renderDiff(p.toUnifiedDiff()));
+                html.append("</code></pre>\n");
+                html.append("          </div>\n");
+                // Cap to keep page size bounded on huge groups; the cap is generous.
+                if (rendered >= 50) {
+                    html.append("          <div class=\"fix-more-note\">+").append(fixCount - rendered)
+                            .append(" more patches not shown to keep the report compact.</div>\n");
+                    break;
+                }
+            }
+            html.append("        </div>\n");
             html.append("      </div>\n");
         }
 
@@ -1599,6 +1661,46 @@ public class HtmlReportGenerator {
             if (c.ordinal() < best.ordinal()) best = c;
         }
         return best;
+    }
+
+    /**
+     * Returns the highest patch confidence (lowest ordinal: SAFE &lt; MODERATE
+     * &lt; REVIEW_REQUIRED) across all patches associated with the given
+     * findings. Used to colour the FIX AVAILABLE badge.
+     */
+    private Patch.Confidence highestPatchConfidence(List<Finding> findings, Map<Finding, Patch> patches) {
+        Patch.Confidence best = Patch.Confidence.REVIEW_REQUIRED;
+        if (patches == null) return best;
+        for (Finding f : findings) {
+            Patch p = patches.get(f);
+            if (p == null || p.getConfidence() == null) continue;
+            if (p.getConfidence().ordinal() < best.ordinal()) best = p.getConfidence();
+        }
+        return best;
+    }
+
+    /**
+     * Renders a unified-diff string as HTML-escaped &lt;span&gt;-wrapped lines so
+     * that CSS can colour additions green and removals red. The +++/--- header
+     * lines and @@-hunk marker get a "diff-header" class for muted styling.
+     */
+    private String renderDiff(String unifiedDiff) {
+        if (unifiedDiff == null || unifiedDiff.isEmpty()) return "";
+        StringBuilder out = new StringBuilder(unifiedDiff.length() + 256);
+        for (String line : unifiedDiff.split("\n", -1)) {
+            String cls;
+            if (line.startsWith("+++") || line.startsWith("---") || line.startsWith("@@")) {
+                cls = "diff-header";
+            } else if (line.startsWith("+")) {
+                cls = "diff-add";
+            } else if (line.startsWith("-")) {
+                cls = "diff-del";
+            } else {
+                cls = "diff-ctx";
+            }
+            out.append("<span class=\"").append(cls).append("\">").append(escHtml(line)).append("</span>\n");
+        }
+        return out.toString();
     }
 
     private String formatCategory(Finding.Category cat) {

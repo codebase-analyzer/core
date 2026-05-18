@@ -16,6 +16,8 @@ import dev.codeanalyzer.core.analyzer.prioritization.ImpactScorer;
 import dev.codeanalyzer.core.analyzer.prioritization.PrioritizedFinding;
 import dev.codeanalyzer.core.analyzer.prioritization.TechDebt;
 import dev.codeanalyzer.core.analyzer.prioritization.TechDebtCalculator;
+import dev.codeanalyzer.core.autofix.AutoFixEngine;
+import dev.codeanalyzer.core.autofix.Patch;
 import dev.codeanalyzer.core.parser.ProjectMetadataDetector;
 import dev.codeanalyzer.core.parser.ProjectScanner;
 import dev.codeanalyzer.core.registry.AnalyzerRegistry;
@@ -28,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Main entry point for the analysis engine.
@@ -173,6 +176,18 @@ public class AnalysisEngine {
             PrioritizedFinding top = prioritized.get(0);
             log.info("Top priority fix: impact={}, {}: {}",
                     top.getImpactScore(), top.getFinding().getCategory(), top.getFinding().getTitle());
+        }
+
+        // Auto-fix generation (B6) — produce unified-diff patches for findings
+        // whose ruleId matches a registered fixer. Generation is always-on
+        // (cheap: no work for ruleIds without a fixer). Applying patches to
+        // disk is opt-in via a future --fix CLI flag.
+        try {
+            AutoFixEngine fixEngine = new AutoFixEngine();
+            Map<Finding, Patch> fixes = fixEngine.generatePatches(findings, sources);
+            result.setAvailableFixes(fixes);
+        } catch (RuntimeException e) {
+            log.warn("Auto-fix generation failed: {}", e.getMessage());
         }
 
         log.info("Analysis complete in {}ms: {} findings ({} critical, {} high)",

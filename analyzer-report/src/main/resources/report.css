@@ -407,6 +407,17 @@ a:hover { color: #79c0ff; }
 .conf-badge.conf-medium  { background: rgba(241,196,15,0.10); color: #d4a017; border-color: rgba(241,196,15,0.35); }
 .conf-badge.conf-low     { background: rgba(127,140,141,0.10); color: #95a5a6; border-color: rgba(127,140,141,0.35); }
 
+/* Auto-fix badge — signals a patch is available for this finding (B6) */
+.fix-badge {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px;
+  border: 1px solid transparent;
+  background: rgba(126,231,135,0.12); color: #7ee787; border-color: rgba(126,231,135,0.35);
+}
+.fix-badge.fix-safe              { background: rgba(126,231,135,0.15); color: #7ee787; border-color: rgba(126,231,135,0.45); }
+.fix-badge.fix-moderate          { background: rgba(241,196,15,0.12);  color: #d4a017; border-color: rgba(241,196,15,0.4); }
+.fix-badge.fix-review-required   { background: rgba(255,99,72,0.12);   color: #ff8866; border-color: rgba(255,99,72,0.4); }
+
 .finding-title { font-size: 14px; font-weight: 600; color: #e6edf3; flex: 1; }
 .finding-count { font-size: 12px; color: #8b949e; background: #21262d; padding: 2px 10px; border-radius: 12px; }
 .finding-location { margin-bottom: 8px; }
@@ -439,6 +450,61 @@ a:hover { color: #79c0ff; }
 .suggestion-code code { background: none; padding: 0; color: inherit; font-size: inherit; }
 
 /* Impacted locations */
+/* Auto-fix patches (B6) — collapsible block under each finding card */
+.finding-fixes { margin-top: 10px; }
+.fixes-header {
+  font-size: 12px; font-weight: 600; color: #7ee787; cursor: pointer;
+  padding: 6px 0; user-select: none;
+}
+.fixes-header:hover { color: #a8f0ad; }
+.fixes-toggle {
+  font-size: 10px; display: inline-block; transition: transform 0.2s; margin-right: 4px;
+}
+.fixes-toggle.open { transform: rotate(90deg); }
+.fixes-content { margin-top: 6px; }
+
+.fix-patch {
+  background: #0d1117; border: 1px solid #21262d; border-radius: 6px;
+  padding: 10px; margin-bottom: 10px;
+}
+.fix-patch:last-child { margin-bottom: 0; }
+.fix-patch-header {
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  font-size: 12px; margin-bottom: 8px; padding-bottom: 8px;
+  border-bottom: 1px dashed #21262d;
+}
+.fix-conf {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px;
+  border: 1px solid transparent;
+}
+.fix-conf.fix-safe            { background: rgba(126,231,135,0.15); color: #7ee787; border-color: rgba(126,231,135,0.45); }
+.fix-conf.fix-moderate        { background: rgba(241,196,15,0.12);  color: #d4a017; border-color: rgba(241,196,15,0.4); }
+.fix-conf.fix-review-required { background: rgba(255,99,72,0.12);   color: #ff8866; border-color: rgba(255,99,72,0.4); }
+.fix-desc { color: #c9d1d9; flex: 1; }
+.fix-loc code {
+  font-size: 11px; color: #58a6ff;
+  background: rgba(88,166,255,0.1); padding: 2px 6px; border-radius: 3px;
+  font-family: 'SF Mono', Consolas, monospace;
+}
+
+.diff {
+  background: #010409; border: 1px solid #21262d; border-radius: 4px;
+  padding: 8px 10px; margin: 0; overflow-x: auto;
+  font-family: 'SF Mono', Consolas, monospace; font-size: 12px;
+  line-height: 1.45; color: #c9d1d9; white-space: pre;
+}
+.diff span { display: block; }
+.diff .diff-header { color: #8b949e; }
+.diff .diff-ctx    { color: #c9d1d9; }
+.diff .diff-add    { color: #7ee787; background: rgba(126,231,135,0.10); }
+.diff .diff-del    { color: #ff7b72; background: rgba(255,123,114,0.10); }
+
+.fix-more-note {
+  font-size: 11px; color: #8b949e; font-style: italic;
+  padding: 6px 10px; text-align: center;
+}
+
 .finding-locations { margin-top: 10px; }
 .locations-header {
   font-size: 12px; font-weight: 600; color: #58a6ff; cursor: pointer;
