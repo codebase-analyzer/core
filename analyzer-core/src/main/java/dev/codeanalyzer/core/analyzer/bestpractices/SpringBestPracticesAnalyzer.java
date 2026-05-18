@@ -80,6 +80,8 @@ public class SpringBestPracticesAnalyzer implements Analyzer {
                 findings.add(new Finding(
                         Category.SPRING_TRANSACTIONAL_MISUSE,
                         Severity.CRITICAL,
+                        Finding.Confidence.HIGH,
+                        "spring.transactional-private",
                         "@Transactional on private method (silently ignored)",
                         String.format("@Transactional on private method %s.%s() — Spring proxies cannot " +
                                 "intercept private methods. The annotation has zero effect.",
@@ -120,7 +122,8 @@ public class SpringBestPracticesAnalyzer implements Analyzer {
                                 "```\n\n" +
                                 "### When to suppress\n" +
                                 "Never. There is no legitimate use of `@Transactional` on a private method.",
-                                methodName, methodName)
+                                methodName, methodName),
+                        java.util.Collections.<String>emptyList()
                 ));
             }
 

@@ -1,6 +1,10 @@
 package dev.codeanalyzer.core.autofix;
 
+import dev.codeanalyzer.core.autofix.fixers.EagerToLazyFixer;
+import dev.codeanalyzer.core.autofix.fixers.EmptyCatchFixer;
 import dev.codeanalyzer.core.autofix.fixers.MissingOverrideFixer;
+import dev.codeanalyzer.core.autofix.fixers.StringComparisonFixer;
+import dev.codeanalyzer.core.autofix.fixers.TransactionalPrivateFixer;
 import dev.codeanalyzer.core.model.Finding;
 import dev.codeanalyzer.core.model.ParsedSource;
 import org.slf4j.Logger;
@@ -35,8 +39,14 @@ public class AutoFixEngine {
     private final Map<String, AutoFixer> fixers = new HashMap<String, AutoFixer>();
 
     public AutoFixEngine() {
-        // Built-in fixers registered by default. Add more in future PRs.
-        register(new MissingOverrideFixer());
+        // Built-in fixers registered by default. Order doesn't matter for
+        // lookup (we key by ruleId) but matches roughly increasing intervention
+        // level: SAFE → MODERATE → REVIEW_REQUIRED.
+        register(new MissingOverrideFixer());        // SAFE
+        register(new EmptyCatchFixer());             // SAFE
+        register(new StringComparisonFixer());       // MODERATE
+        register(new EagerToLazyFixer());            // MODERATE
+        register(new TransactionalPrivateFixer());   // REVIEW_REQUIRED
     }
 
     /** Registers a fixer by its {@code ruleId}. Overrides any prior entry. */
