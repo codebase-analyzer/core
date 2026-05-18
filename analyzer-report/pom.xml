@@ -13,6 +13,28 @@
     <artifactId>analyzer-report</artifactId>
     <packaging>jar</packaging>
 
+    <build>
+        <resources>
+            <!-- Filter code-owl.properties so the runtime can read project.version
+                 (survives the maven-shade-plugin boundary into analyzer-cli.jar). -->
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>code-owl.properties</include>
+                </includes>
+            </resource>
+            <!-- Everything else (CSS, JS, PNGs) copied unfiltered. -->
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>code-owl.properties</exclude>
+                </excludes>
+            </resource>
+        </resources>
+    </build>
+
     <dependencies>
         <dependency>
             <groupId>dev.codeanalyzer</groupId>
