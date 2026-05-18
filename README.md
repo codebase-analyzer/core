@@ -11,7 +11,8 @@
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Java 8+](https://img.shields.io/badge/Java-8%2B-orange.svg)](#requirements)
-[![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)](#)
+[![CI](https://github.com/codebase-analyzer/core/actions/workflows/ci.yml/badge.svg)](https://github.com/codebase-analyzer/core/actions/workflows/ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/codebase-analyzer/core?label=release&color=brightgreen)](https://github.com/codebase-analyzer/core/releases/latest)
 
 ---
 
@@ -27,15 +28,22 @@ If you're staring down a Java 8→17 migration, a Spring Boot 2→3 upgrade, or 
 
 ## Quick start
 
+**Option A — Download the latest release (fastest):**
+
 ```bash
-# Build (one-time)
-mvn clean package -DskipTests
+# One command. Needs JRE 8+ on your PATH. No Maven required.
+curl -sSL -o code-owl.jar https://github.com/codebase-analyzer/core/releases/latest/download/analyzer-cli.jar
+java -jar code-owl.jar /path/to/project
 
-# Scan any project — produces a self-contained HTML report
-java -jar analyzer-cli/target/analyzer-cli-0.1.0-SNAPSHOT.jar /path/to/project
-
-# Output
+# Open the report
 open analyzer-output/analysis-report.html
+```
+
+**Option B — Build from source:**
+
+```bash
+mvn clean package -DskipTests
+java -jar analyzer-cli/target/analyzer-cli-*.jar /path/to/project
 ```
 
 That's it. No server, no SaaS account, no telemetry. The HTML report is a single file you can email.
