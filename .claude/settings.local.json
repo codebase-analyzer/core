@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\dev\\\\CodebaseAnalyzer\\\\v0.9\\\\codebase-analyzer\" -Force)",
+      "Bash(Select-Object -Property Name, PSIsContainer)",
+      "Bash(mvn --version)",
+      "Bash(mvn clean *)",
+      "Bash(mvn dependency:build-classpath -pl analyzer-core -q -DincludeScope=compile)",
+      "Bash(mvn dependency:build-classpath -pl analyzer-core -q)",
+      "PowerShell(cd \"C:\\\\dev\\\\CodebaseAnalyzer\\\\v0.9\\\\codebase-analyzer\" && jar tf \"$HOME\\\\.m2\\\\repository\\\\net\\\\sourceforge\\\\pmd\\\\pmd-core\\\\7.3.0\\\\pmd-core-7.3.0.jar\" | Select-String \"RuleSet.class\")",
+      "Bash(python -c \"import json; d=json.load\\(open\\('analyzer-output/analysis-report.json'\\)\\); [print\\(k,v\\) for k,v in d['metadata']['dependencies'].items\\(\\)]\")",
+      "Bash(mvn -pl analyzer-core compile -q)",
+      "Bash(java -jar analyzer-cli/target/analyzer-cli-0.1.0-SNAPSHOT.jar \"C:\\\\dev\\\\code_space\\\\RBAC\\\\PLX.EUROPE.BEL.AUTHORIZATION_SERVICE\" -o ./analyzer-output)",
+      "Bash(mvn -pl analyzer-core dependency:list -q)",
+      "Bash(java -jar analyzer-cli/target/analyzer-cli-0.1.0-SNAPSHOT.jar \"C:\\\\dev\\\\code_space\\\\phoenix\" -o ./analyzer-output-phoenix)",
+      "Bash(grep -n \"private static final String CSS\\\\|private static final String JAVASCRIPT\\\\|^}$\" \"C:\\\\dev\\\\CodebaseAnalyzer\\\\v0.9\\\\codebase-analyzer\\\\analyzer-report\\\\src\\\\main\\\\java\\\\dev\\\\codeanalyzer\\\\report\\\\HtmlReportGenerator.java\")",
+      "Bash(java -jar analyzer-cli/target/analyzer-cli-0.1.0-SNAPSHOT.jar /c/dev/code_space/phoenix -o /c/dev/CodebaseAnalyzer/v0.9/test-output)",
+      "Bash(ls -la \"C:/dev/CodebaseAnalyzer/v0.9/test-output/analysis-report.html\" 2>&1)",
+      "Bash(java -jar analyzer-cli/target/analyzer-cli-0.1.0-SNAPSHOT.jar /c/dev/code_space/phoenix -o /c/dev/CodebaseAnalyzer/v0.9/test-output --mode exec)",
+      "Bash(java -jar analyzer-cli/target/analyzer-cli-0.1.0-SNAPSHOT.jar /c/dev/code_space/phoenix --write-baseline /c/dev/CodebaseAnalyzer/v0.9/test-output/baseline.json)",
+      "Bash(java -jar analyzer-cli/target/analyzer-cli-0.1.0-SNAPSHOT.jar /c/dev/code_space/phoenix -o /c/dev/CodebaseAnalyzer/v0.9/test-output --baseline /c/dev/CodebaseAnalyzer/v0.9/test-output/baseline.json)",
+      "Bash(java -jar analyzer-cli/target/analyzer-cli-0.1.0-SNAPSHOT.jar /c/dev/code_space/phoenix -o /c/dev/CodebaseAnalyzer/v0.9/test-output --baseline /c/dev/CodebaseAnalyzer/v0.9/test-output/baseline-regression.json)",
+      "Bash(java -jar analyzer-cli/target/analyzer-cli-0.1.0-SNAPSHOT.jar /c/dev/code_space/phoenix -o /c/dev/CodebaseAnalyzer/v0.9/test-output --markdown-summary /c/dev/CodebaseAnalyzer/v0.9/test-output/summary.md --baseline /c/dev/CodebaseAnalyzer/v0.9/test-output/baseline.json)",
+      "Bash(java -jar analyzer-cli/target/analyzer-cli-0.1.0-SNAPSHOT.jar /c/dev/code_space/phoenix -o /c/dev/CodebaseAnalyzer/v0.9/test-output --markdown-summary /c/dev/CodebaseAnalyzer/v0.9/test-output/summary-nobaseline.md)"
+    ]
+  }
+}

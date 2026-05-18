@@ -1,0 +1,127 @@
+# Code Owl — composite action (technical project: codebase-analyzer)
+#
+# This file is meant to live at the ROOT of a public GitHub repository (e.g.
+# codebase-analyzer/core-action). Once published to the GitHub Marketplace,
+# any project can adopt the analyzer with a single workflow step:
+#
+#     - uses: codebase-analyzer/core-action@v1
+#       with:
+#         project-path: .
+#         mode: lead
+#         baseline: .ca/baseline.json
+#         markdown-summary: .ca/summary.md
+#
+# Inputs let users customize without copying a 60-line workflow into every repo.
+
+name: 'Code Owl'
+description: 'The codebase analyzer that sees what others miss. Specialist static analysis for legacy Java / Spring / Hibernate — migration readiness, tech debt in €, architecture cycles, runtime SQL+TX issues.'
+author: 'codebase-analyzer'
+
+branding:
+  icon: 'search'
+  color: 'orange'
+
+inputs:
+  project-path:
+    description: 'Path to the project root directory to scan.'
+    required: false
+    default: '.'
+  output-dir:
+    description: 'Directory to write the HTML report into.'
+    required: false
+    default: 'analyzer-output'
+  mode:
+    description: 'Initial report mode in the HTML view: dev | lead | exec.'
+    required: false
+    default: 'dev'
+  currency:
+    description: 'ISO-4217 currency code for tech-debt cost (EUR, USD, GBP, ...).'
+    required: false
+    default: 'EUR'
+  rate-per-hour:
+    description: 'Hourly rate for tech-debt cost projection.'
+    required: false
+    default: '100'
+  baseline:
+    description: 'Path to a baseline JSON file (enables trend deltas).'
+    required: false
+    default: ''
+  markdown-summary:
+    description: 'Path to write a Markdown summary suitable for PR comments.'
+    required: false
+    default: ''
+  fail-on-critical:
+    description: 'If "true", the action exits non-zero when any CRITICAL findings exist.'
+    required: false
+    default: 'false'
+  # Override for advanced users — pin a specific analyzer release version.
+  analyzer-version:
+    description: 'Analyzer release tag to download (default: latest).'
+    required: false
+    default: 'latest'
+
+outputs:
+  report-path:
+    description: 'Path to the generated HTML report.'
+    value: ${{ steps.run.outputs.report-path }}
+  summary-path:
+    description: 'Path to the generated Markdown summary (empty if not requested).'
+    value: ${{ steps.run.outputs.summary-path }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Java 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '17'
+
+    # ── Download the analyzer JAR from a published GitHub Release ────────
+    # Replace codebase-analyzer/core with your actual repo coordinates.
+    - name: Download analyzer
+      shell: bash
+      run: |
+        if [ "${{ inputs.analyzer-version }}" = "latest" ]; then
+          URL="https://github.com/codebase-analyzer/core/releases/latest/download/analyzer-cli.jar"
+        else
+          URL="https://github.com/codebase-analyzer/core/releases/download/${{ inputs.analyzer-version }}/analyzer-cli.jar"
+        fi
+        echo "Downloading $URL"
+        curl -sSL -o /tmp/analyzer.jar "$URL"
+        echo "Downloaded $(du -h /tmp/analyzer.jar | cut -f1)"
+
+    - name: Run analysis
+      id: run
+      shell: bash
+      run: |
+        set -e
+        mkdir -p "${{ inputs.output-dir }}"
+
+        ARGS="${{ inputs.project-path }} --output ${{ inputs.output-dir }}"
+        ARGS="$ARGS --mode ${{ inputs.mode }}"
+        ARGS="$ARGS --currency ${{ inputs.currency }}"
+        ARGS="$ARGS --rate-per-hour ${{ inputs.rate-per-hour }}"
+
+        if [ -n "${{ inputs.baseline }}" ] && [ -f "${{ inputs.baseline }}" ]; then
+          ARGS="$ARGS --baseline ${{ inputs.baseline }}"
+        fi
+        if [ -n "${{ inputs.markdown-summary }}" ]; then
+          mkdir -p "$(dirname "${{ inputs.markdown-summary }}")"
+          ARGS="$ARGS --markdown-summary ${{ inputs.markdown-summary }}"
+        fi
+
+        set +e
+        java -jar /tmp/analyzer.jar $ARGS
+        EXIT_CODE=$?
+        set -e
+
+        echo "report-path=${{ inputs.output-dir }}/analysis-report.html" >> $GITHUB_OUTPUT
+        echo "summary-path=${{ inputs.markdown-summary }}" >> $GITHUB_OUTPUT
+
+        # Exit code 2 from the analyzer == critical findings detected.
+        if [ "$EXIT_CODE" = "2" ] && [ "${{ inputs.fail-on-critical }}" = "true" ]; then
+          echo "::error::Critical findings detected (fail-on-critical=true)."
+          exit 2
+        fi
+        exit 0

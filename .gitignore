@@ -1,0 +1,33 @@
+# Maven
+target/
+dependency-reduced-pom.xml
+*.flattened-pom.xml
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.project
+.classpath
+.settings/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Analyzer outputs (local test runs)
+analyzer-output/
+analyzer-output-*/
+test-output/
+*.baseline.json
+
+# Logs
+*.log
+hs_err_pid*
+
+# Local secrets / env
+.env
+.env.local

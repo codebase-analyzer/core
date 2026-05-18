@@ -1,0 +1,74 @@
+# Code Owl — Basic workflow
+#
+# Drop this file at .github/workflows/codeowl.yml in your project.
+# On every push to main + every PR, it scans the codebase and uploads the
+# self-contained HTML report as a downloadable workflow artifact.
+#
+# Build approach: clones the analyzer from source and builds it in the runner.
+# Add ~2 min per run. Switch to the release-download approach (docs/integrations/
+# github-actions/with-release.yml) once you have a stable release.
+#
+# Requirements: Java 17 (analyzer is compiled for Java 8 but runs on any 8+).
+
+name: Code Owl
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:    # manual trigger
+
+jobs:
+  analyze:
+    name: Code Owl scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history — analyzer uses git churn for prioritization
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      # ───────────────────────────────────────────────────────────────────
+      # Build the analyzer jar. Replace this whole block with a download
+      # step once we publish stable releases (see with-release.yml).
+      # ───────────────────────────────────────────────────────────────────
+      - name: Build Code Owl
+        run: |
+          git clone --depth 1 https://github.com/codebase-analyzer/core.git /tmp/codebase-analyzer
+          cd /tmp/codebase-analyzer
+          mvn clean package -q -DskipTests
+          cp analyzer-cli/target/analyzer-cli-*.jar /tmp/analyzer.jar
+          echo "Analyzer built: $(du -h /tmp/analyzer.jar | cut -f1)"
+
+      - name: Run analysis
+        run: |
+          mkdir -p analyzer-output
+          java -jar /tmp/analyzer.jar . \
+            --output analyzer-output \
+            --mode lead \
+            --currency EUR
+        # Exit code 2 = critical findings — uncomment to fail the build on those.
+        # continue-on-error: false
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: codeowl-report
+          path: analyzer-output/analysis-report.html
+          retention-days: 30

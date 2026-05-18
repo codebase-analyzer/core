@@ -1,0 +1,512 @@
+[
+  {
+    "cveId": "CVE-2021-44228",
+    "groupId": "org.apache.logging.log4j",
+    "artifactId": "log4j-core",
+    "affectedRange": "[2.0,2.15.0)",
+    "fixedVersion": "2.17.1",
+    "cvssScore": 10.0,
+    "severity": "CRITICAL",
+    "summary": "Log4Shell — Remote code execution via JNDI lookup in log messages. Allows unauthenticated RCE by crafting a malicious log input string."
+  },
+  {
+    "cveId": "CVE-2021-45046",
+    "groupId": "org.apache.logging.log4j",
+    "artifactId": "log4j-core",
+    "affectedRange": "[2.0,2.16.0)",
+    "fixedVersion": "2.17.0",
+    "cvssScore": 9.0,
+    "severity": "CRITICAL",
+    "summary": "Incomplete fix for CVE-2021-44228. Thread Context Map patterns allow RCE in certain non-default configurations."
+  },
+  {
+    "cveId": "CVE-2021-45105",
+    "groupId": "org.apache.logging.log4j",
+    "artifactId": "log4j-core",
+    "affectedRange": "[2.0,2.17.0)",
+    "fixedVersion": "2.17.0",
+    "cvssScore": 7.5,
+    "severity": "HIGH",
+    "summary": "Denial of service via uncontrolled recursion from self-referential lookups in Thread Context Map."
+  },
+  {
+    "cveId": "CVE-2022-22965",
+    "groupId": "org.springframework",
+    "artifactId": "spring-beans",
+    "affectedRange": "[5.3.0,5.3.18)",
+    "fixedVersion": "5.3.18",
+    "cvssScore": 9.8,
+    "severity": "CRITICAL",
+    "summary": "Spring4Shell — RCE via data binding with ClassLoader access on JDK 9+. Allows remote code execution through crafted HTTP requests."
+  },
+  {
+    "cveId": "CVE-2022-22965",
+    "groupId": "org.springframework",
+    "artifactId": "spring-webmvc",
+    "affectedRange": "[5.3.0,5.3.18)",
+    "fixedVersion": "5.3.18",
+    "cvssScore": 9.8,
+    "severity": "CRITICAL",
+    "summary": "Spring4Shell — RCE via data binding with ClassLoader access on JDK 9+. Requires Spring MVC running on Tomcat as WAR."
+  },
+  {
+    "cveId": "CVE-2022-22978",
+    "groupId": "org.springframework.security",
+    "artifactId": "spring-security-web",
+    "affectedRange": "[5.5.0,5.5.7)",
+    "fixedVersion": "5.5.7",
+    "cvssScore": 9.8,
+    "severity": "CRITICAL",
+    "summary": "Authorization bypass via regex pattern in RegexRequestMatcher when using '.' in the pattern with Spring MVC."
+  },
+  {
+    "cveId": "CVE-2023-20861",
+    "groupId": "org.springframework",
+    "artifactId": "spring-expression",
+    "affectedRange": "[6.0.0,6.0.6)",
+    "fixedVersion": "6.0.6",
+    "cvssScore": 7.5,
+    "severity": "HIGH",
+    "summary": "Denial of service via specially crafted SpEL expression that causes excessive resource consumption."
+  },
+  {
+    "cveId": "CVE-2023-20863",
+    "groupId": "org.springframework",
+    "artifactId": "spring-expression",
+    "affectedRange": "[5.3.0,5.3.27)",
+    "fixedVersion": "5.3.27",
+    "cvssScore": 7.5,
+    "severity": "HIGH",
+    "summary": "Denial of service via specially crafted SpEL expression in Spring Framework 5.3.x."
+  },
+  {
+    "cveId": "CVE-2020-36518",
+    "groupId": "com.fasterxml.jackson.core",
+    "artifactId": "jackson-databind",
+    "affectedRange": "[2.0.0,2.13.2.1)",
+    "fixedVersion": "2.13.2.1",
+    "cvssScore": 7.5,
+    "severity": "HIGH",
+    "summary": "Denial of service via deeply nested JSON objects causing StackOverflowError in BeanDeserializer."
+  },
+  {
+    "cveId": "CVE-2022-42003",
+    "groupId": "com.fasterxml.jackson.core",
+    "artifactId": "jackson-databind",
+    "affectedRange": "[2.0.0,2.13.4.1)",
+    "fixedVersion": "2.13.4.1",
+    "cvssScore": 7.5,
+    "severity": "HIGH",
+    "summary": "Resource exhaustion via deeply nested object/array nesting when UNWRAP_SINGLE_VALUE_ARRAYS is enabled."
+  },
+  {
+    "cveId": "CVE-2022-42004",
+    "groupId": "com.fasterxml.jackson.core",
+    "artifactId": "jackson-databind",
+    "affectedRange": "[2.0.0,2.13.4)",
+    "fixedVersion": "2.13.4",
+    "cvssScore": 7.5,
+    "severity": "HIGH",
+    "summary": "Resource exhaustion attack via deeply nested BeanDeserializerFactory using USE_BIG_DECIMAL_FOR_FLOATS."
+  },
+  {
+    "cveId": "CVE-2022-42889",
+    "groupId": "org.apache.commons",
+    "artifactId": "commons-text",
+    "affectedRange": "[1.5,1.10.0)",
+    "fixedVersion": "1.10.0",
+    "cvssScore": 9.8,
+    "severity": "CRITICAL",
+    "summary": "Text4Shell — RCE via StringSubstitutor with script, dns, and url interpolation enabled by default."
+  },
+  {
+    "cveId": "CVE-2022-25857",
+    "groupId": "org.yaml",
+    "artifactId": "snakeyaml",
+    "affectedRange": "(,1.32)",
+    "fixedVersion": "1.32",
+    "cvssScore": 7.5,
+    "severity": "HIGH",
+    "summary": "Denial of service via crafted YAML input causing stack overflow during parsing."
+  },
+  {
+    "cveId": "CVE-2022-1471",
+    "groupId": "org.yaml",
+    "artifactId": "snakeyaml",
+    "affectedRange": "(,2.0)",
+    "fixedVersion": "2.0",
+    "cvssScore": 9.8,
+    "severity": "CRITICAL",
+    "summary": "Remote code execution via unsafe YAML deserialization using the Constructor class."
+  },
+  {
+    "cveId": "CVE-2020-25649",
+    "groupId": "com.fasterxml.jackson.core",
+    "artifactId": "jackson-databind",
+    "affectedRange": "[2.0.0,2.10.5.1)",
+    "fixedVersion": "2.10.5.1",
+    "cvssScore": 7.5,
+    "severity": "HIGH",
+    "summary": "XML external entity (XXE) injection when processing XML content via Jackson."
+  },
+  {
+    "cveId": "CVE-2023-34055",
+    "groupId": "org.springframework.boot",
+    "artifactId": "spring-boot-actuator",
+    "affectedRange": "[3.0.0,3.0.12)",
+    "fixedVersion": "3.0.12",
+    "cvssScore": 5.3,
+    "severity": "MEDIUM",
+    "summary": "Denial of service when application uses wildcard pattern for web exposure of Actuator endpoints."
+  },
+  {
+    "cveId": "CVE-2023-34055",
+    "groupId": "org.springframework.boot",
+    "artifactId": "spring-boot-actuator",
+    "affectedRange": "[2.0.0,2.7.18)",
+    "fixedVersion": "2.7.18",
+    "cvssScore": 5.3,
+    "severity": "MEDIUM",
+    "summary": "Denial of service when application uses wildcard pattern for web exposure of Actuator endpoints."
+  },
+  {
+    "cveId": "CVE-2020-15250",
+    "groupId": "junit",
+    "artifactId": "junit",
+    "affectedRange": "[4.7,4.13.1)",
+    "fixedVersion": "4.13.1",
+    "cvssScore": 5.5,
+    "severity": "MEDIUM",
+    "summary": "Information disclosure via predictable temporary folder creation allowing local information leak."
+  },
+  {
+    "cveId": "CVE-2023-6378",
+    "groupId": "ch.qos.logback",
+    "artifactId": "logback-classic",
+    "affectedRange": "[1.0.0,1.2.13)",
+    "fixedVersion": "1.2.13",
+    "cvssScore": 7.5,
+    "severity": "HIGH",
+    "summary": "Denial of service via crafted serialized data when receiver component is enabled."
+  },
+  {
+    "cveId": "CVE-2023-6378",
+    "groupId": "ch.qos.logback",
+    "artifactId": "logback-classic",
+    "affectedRange": "[1.3.0,1.3.12)",
+    "fixedVersion": "1.3.12",
+    "cvssScore": 7.5,
+    "severity": "HIGH",
+    "summary": "Denial of service via crafted serialized data when receiver component is enabled."
+  },
+  {
+    "cveId": "CVE-2020-9488",
+    "groupId": "org.apache.logging.log4j",
+    "artifactId": "log4j-core",
+    "affectedRange": "[2.0,2.13.2)",
+    "fixedVersion": "2.13.2",
+    "cvssScore": 3.7,
+    "severity": "LOW",
+    "summary": "Improper certificate validation in SMTP appender allowing man-in-the-middle attacks."
+  },
+  {
+    "cveId": "CVE-2018-1258",
+    "groupId": "org.springframework.security",
+    "artifactId": "spring-security-core",
+    "affectedRange": "[5.0.0,5.0.5)",
+    "fixedVersion": "5.0.5",
+    "cvssScore": 8.8,
+    "severity": "HIGH",
+    "summary": "Authorization bypass when using method security with Spring Security on Spring Framework 5.0.5."
+  },
+  {
+    "cveId": "CVE-2022-31692",
+    "groupId": "org.springframework.security",
+    "artifactId": "spring-security-web",
+    "affectedRange": "[5.7.0,5.7.5)",
+    "fixedVersion": "5.7.5",
+    "cvssScore": 9.8,
+    "severity": "CRITICAL",
+    "summary": "Authorization bypass when using forward or include dispatcher types with authorization rules."
+  },
+  {
+    "cveId": "CVE-2021-22118",
+    "groupId": "org.springframework",
+    "artifactId": "spring-web",
+    "affectedRange": "[5.2.0,5.2.15)",
+    "fixedVersion": "5.2.15",
+    "cvssScore": 7.8,
+    "severity": "HIGH",
+    "summary": "Privilege escalation via local file access when serving static resources from class path."
+  },
+  {
+    "cveId": "CVE-2021-22118",
+    "groupId": "org.springframework",
+    "artifactId": "spring-web",
+    "affectedRange": "[5.3.0,5.3.7)",
+    "fixedVersion": "5.3.7",
+    "cvssScore": 7.8,
+    "severity": "HIGH",
+    "summary": "Privilege escalation via local file access when serving static resources from class path."
+  },
+  {
+    "cveId": "CVE-2020-5421",
+    "groupId": "org.springframework",
+    "artifactId": "spring-web",
+    "affectedRange": "[5.2.0,5.2.9)",
+    "fixedVersion": "5.2.9",
+    "cvssScore": 6.5,
+    "severity": "MEDIUM",
+    "summary": "RFD (Reflected File Download) attack via jsessionid path parameter in URLs."
+  },
+  {
+    "cveId": "CVE-2020-11023",
+    "groupId": "org.webjars",
+    "artifactId": "jquery",
+    "affectedRange": "[1.0.3,3.5.0)",
+    "fixedVersion": "3.5.0",
+    "cvssScore": 6.1,
+    "severity": "MEDIUM",
+    "summary": "Cross-site scripting (XSS) via passing HTML containing option elements to jQuery DOM manipulation methods."
+  },
+  {
+    "cveId": "CVE-2022-41854",
+    "groupId": "org.yaml",
+    "artifactId": "snakeyaml",
+    "affectedRange": "(,1.33)",
+    "fixedVersion": "1.33",
+    "cvssScore": 6.5,
+    "severity": "MEDIUM",
+    "summary": "Stack overflow via crafted YAML document with recursive anchors and aliases."
+  },
+  {
+    "cveId": "CVE-2015-7501",
+    "groupId": "commons-collections",
+    "artifactId": "commons-collections",
+    "affectedRange": "[3.0,3.2.2)",
+    "fixedVersion": "3.2.2",
+    "cvssScore": 9.8,
+    "severity": "CRITICAL",
+    "summary": "Remote code execution via unsafe Java deserialization using InvokerTransformer gadget chain."
+  },
+  {
+    "cveId": "CVE-2019-10086",
+    "groupId": "commons-beanutils",
+    "artifactId": "commons-beanutils",
+    "affectedRange": "[1.0,1.9.4)",
+    "fixedVersion": "1.9.4",
+    "cvssScore": 7.3,
+    "severity": "HIGH",
+    "summary": "Remote code execution via PropertyUtils class allowing access to class loader through class property."
+  },
+  {
+    "cveId": "CVE-2021-37714",
+    "groupId": "org.jsoup",
+    "artifactId": "jsoup",
+    "affectedRange": "(,1.14.2)",
+    "fixedVersion": "1.14.2",
+    "cvssScore": 7.5,
+    "severity": "HIGH",
+    "summary": "Denial of service via carefully crafted HTML/XML input causing infinite loops during parsing."
+  },
+  {
+    "cveId": "CVE-2023-2976",
+    "groupId": "com.google.guava",
+    "artifactId": "guava",
+    "affectedRange": "(,32.0.0)",
+    "fixedVersion": "32.0.0-jre",
+    "cvssScore": 7.1,
+    "severity": "HIGH",
+    "summary": "Insecure temporary file creation in FileBackedOutputStream allowing local information disclosure."
+  },
+  {
+    "cveId": "CVE-2023-35116",
+    "groupId": "com.fasterxml.jackson.core",
+    "artifactId": "jackson-databind",
+    "affectedRange": "[2.0.0,2.15.2)",
+    "fixedVersion": "2.15.2",
+    "cvssScore": 4.7,
+    "severity": "MEDIUM",
+    "summary": "Denial of service via crafted object with recursive structure causing stack overflow."
+  },
+  {
+    "cveId": "CVE-2022-23181",
+    "groupId": "org.apache.tomcat.embed",
+    "artifactId": "tomcat-embed-core",
+    "affectedRange": "[10.0.0,10.0.18)",
+    "fixedVersion": "10.0.18",
+    "cvssScore": 7.0,
+    "severity": "HIGH",
+    "summary": "Local privilege escalation via race condition in FileStore session persistence."
+  },
+  {
+    "cveId": "CVE-2022-23181",
+    "groupId": "org.apache.tomcat.embed",
+    "artifactId": "tomcat-embed-core",
+    "affectedRange": "[9.0.0,9.0.58)",
+    "fixedVersion": "9.0.58",
+    "cvssScore": 7.0,
+    "severity": "HIGH",
+    "summary": "Local privilege escalation via race condition in FileStore session persistence."
+  },
+  {
+    "cveId": "CVE-2023-46589",
+    "groupId": "org.apache.tomcat.embed",
+    "artifactId": "tomcat-embed-core",
+    "affectedRange": "[9.0.0,9.0.83)",
+    "fixedVersion": "9.0.83",
+    "cvssScore": 7.5,
+    "severity": "HIGH",
+    "summary": "HTTP request smuggling via incorrect parsing of HTTP trailer headers."
+  },
+  {
+    "cveId": "CVE-2023-44487",
+    "groupId": "io.netty",
+    "artifactId": "netty-codec-http2",
+    "affectedRange": "(,4.1.100)",
+    "fixedVersion": "4.1.100.Final",
+    "cvssScore": 7.5,
+    "severity": "HIGH",
+    "summary": "HTTP/2 Rapid Reset attack causing denial of service via stream cancellation."
+  },
+  {
+    "cveId": "CVE-2023-34462",
+    "groupId": "io.netty",
+    "artifactId": "netty-handler",
+    "affectedRange": "[4.1.0,4.1.94)",
+    "fixedVersion": "4.1.94.Final",
+    "cvssScore": 6.5,
+    "severity": "MEDIUM",
+    "summary": "Denial of service via large TLS client hello causing high CPU and memory consumption."
+  },
+  {
+    "cveId": "CVE-2022-40152",
+    "groupId": "com.fasterxml.woodstox",
+    "artifactId": "woodstox-core",
+    "affectedRange": "[6.0.0,6.4.0)",
+    "fixedVersion": "6.4.0",
+    "cvssScore": 7.5,
+    "severity": "HIGH",
+    "summary": "Denial of service via crafted XML document causing stack overflow in Woodstox XML parser."
+  },
+  {
+    "cveId": "CVE-2022-3171",
+    "groupId": "com.google.protobuf",
+    "artifactId": "protobuf-java",
+    "affectedRange": "[3.16.0,3.21.7)",
+    "fixedVersion": "3.21.7",
+    "cvssScore": 7.5,
+    "severity": "HIGH",
+    "summary": "Denial of service via crafted message with unknown fields causing excessive memory allocation."
+  },
+  {
+    "cveId": "CVE-2023-4043",
+    "groupId": "org.eclipse.parsson",
+    "artifactId": "parsson",
+    "affectedRange": "(,1.1.4)",
+    "fixedVersion": "1.1.4",
+    "cvssScore": 7.5,
+    "severity": "HIGH",
+    "summary": "Denial of service via large number parsing causing excessive CPU consumption in JSON-P."
+  },
+  {
+    "cveId": "CVE-2022-22976",
+    "groupId": "org.springframework.security",
+    "artifactId": "spring-security-crypto",
+    "affectedRange": "[5.5.0,5.5.7)",
+    "fixedVersion": "5.5.7",
+    "cvssScore": 5.3,
+    "severity": "MEDIUM",
+    "summary": "BCrypt password hashing integer overflow when using maximum work factor (31) leading to weak hashes."
+  },
+  {
+    "cveId": "CVE-2021-42550",
+    "groupId": "ch.qos.logback",
+    "artifactId": "logback-classic",
+    "affectedRange": "[1.3.0,1.3.12)",
+    "fixedVersion": "1.3.12",
+    "cvssScore": 6.6,
+    "severity": "MEDIUM",
+    "summary": "Remote code execution via JNDI lookup in logback configuration files when attacker controls configuration."
+  },
+  {
+    "cveId": "CVE-2023-1370",
+    "groupId": "net.minidev",
+    "artifactId": "json-smart",
+    "affectedRange": "(,2.4.9)",
+    "fixedVersion": "2.4.9",
+    "cvssScore": 7.5,
+    "severity": "HIGH",
+    "summary": "Stack overflow via crafted JSON input causing StackOverflowError during parsing."
+  },
+  {
+    "cveId": "CVE-2024-22233",
+    "groupId": "org.springframework",
+    "artifactId": "spring-core",
+    "affectedRange": "[6.0.0,6.0.15)",
+    "fixedVersion": "6.0.15",
+    "cvssScore": 7.5,
+    "severity": "HIGH",
+    "summary": "Denial of service when handling HTTP requests with specific conditions in Spring Framework."
+  },
+  {
+    "cveId": "CVE-2024-22234",
+    "groupId": "org.springframework.security",
+    "artifactId": "spring-security-core",
+    "affectedRange": "[6.1.0,6.1.6)",
+    "fixedVersion": "6.1.6",
+    "cvssScore": 7.4,
+    "severity": "HIGH",
+    "summary": "Authorization bypass when AuthenticationTrustResolver.isFullyAuthenticated returns incorrect result."
+  },
+  {
+    "cveId": "CVE-2023-20873",
+    "groupId": "org.springframework.boot",
+    "artifactId": "spring-boot-actuator-autoconfigure",
+    "affectedRange": "[3.0.0,3.0.6)",
+    "fixedVersion": "3.0.6",
+    "cvssScore": 9.8,
+    "severity": "CRITICAL",
+    "summary": "Security bypass when deployed to Cloud Foundry — all actuator endpoints accessible without authentication."
+  },
+  {
+    "cveId": "CVE-2022-22950",
+    "groupId": "org.springframework",
+    "artifactId": "spring-expression",
+    "affectedRange": "[5.3.0,5.3.17)",
+    "fixedVersion": "5.3.17",
+    "cvssScore": 6.5,
+    "severity": "MEDIUM",
+    "summary": "Denial of service via crafted Spring Expression that causes excessive resource consumption."
+  },
+  {
+    "cveId": "CVE-2020-10693",
+    "groupId": "org.hibernate.validator",
+    "artifactId": "hibernate-validator",
+    "affectedRange": "[6.0.0,6.0.20)",
+    "fixedVersion": "6.0.20.Final",
+    "cvssScore": 5.3,
+    "severity": "MEDIUM",
+    "summary": "Bypass of validation constraint through manipulation of constraint violation message interpolation."
+  },
+  {
+    "cveId": "CVE-2020-25638",
+    "groupId": "org.hibernate",
+    "artifactId": "hibernate-core",
+    "affectedRange": "[5.0.0,5.4.24)",
+    "fixedVersion": "5.4.24.Final",
+    "cvssScore": 7.4,
+    "severity": "HIGH",
+    "summary": "SQL injection via specially crafted string sent through Hibernate ORM when using Criteria API with literals."
+  },
+  {
+    "cveId": "CVE-2019-14900",
+    "groupId": "org.hibernate",
+    "artifactId": "hibernate-core",
+    "affectedRange": "[5.0.0,5.3.15)",
+    "fixedVersion": "5.3.15.Final",
+    "cvssScore": 6.5,
+    "severity": "MEDIUM",
+    "summary": "SQL injection in Hibernate ORM via crafted query strings when using Criteria API with literals."
+  }
+]

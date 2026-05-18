@@ -1,0 +1,117 @@
+# Code Owl — PR delta workflow
+#
+# On every pull request:
+#  1. Scan the BASE branch (e.g. main) and write a baseline snapshot
+#  2. Scan the PR branch with --baseline pointing at that snapshot
+#  3. Post a PR comment with the delta ("this PR adds 3 critical findings")
+#  4. Upload the PR-branch HTML report as an artifact
+#
+# The comment is updated in place on subsequent pushes to the same PR.
+#
+# Drop at: .github/workflows/codeowl-pr.yml
+
+name: Code Owl (PR delta)
+
+on:
+  pull_request:
+    branches: [main]
+
+# 'pull-requests: write' is required to post + update the PR comment.
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  pr-delta:
+    name: Compare PR vs base
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: Build Code Owl
+        run: |
+          git clone --depth 1 https://github.com/codebase-analyzer/core.git /tmp/codebase-analyzer
+          cd /tmp/codebase-analyzer
+          mvn clean package -q -DskipTests
+          cp analyzer-cli/target/analyzer-cli-*.jar /tmp/analyzer.jar
+
+      # ── Step 1: scan the BASE branch to produce the baseline snapshot ──
+      - name: Scan BASE branch (write baseline)
+        run: |
+          # Checkout the base branch in a temporary worktree so PR files
+          # remain untouched.
+          git worktree add /tmp/base-checkout ${{ github.event.pull_request.base.sha }}
+          mkdir -p .ca-pr
+          java -jar /tmp/analyzer.jar /tmp/base-checkout \
+            --write-baseline .ca-pr/baseline.json \
+            --currency EUR
+          git worktree remove /tmp/base-checkout --force
+
+      # ── Step 2: scan the PR branch with --baseline for trend deltas ───
+      - name: Scan PR branch (with delta)
+        run: |
+          mkdir -p analyzer-output
+          java -jar /tmp/analyzer.jar . \
+            --output analyzer-output \
+            --baseline .ca-pr/baseline.json \
+            --markdown-summary .ca-pr/summary.md \
+            --mode lead \
+            --currency EUR
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: codeowl-report-pr-${{ github.event.pull_request.number }}
+          path: analyzer-output/analysis-report.html
+          retention-days: 30
+
+      # ── Step 3: post / update the PR comment with the Markdown summary ─
+      - name: Post PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('.ca-pr/summary.md', 'utf8');
+            const marker = '<!-- codeowl-pr-comment -->';
+            const finalBody = `${marker}\n\n${body}`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body && c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body: finalBody,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: finalBody,
+              });
+            }

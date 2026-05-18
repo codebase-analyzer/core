@@ -1,0 +1,63 @@
+# Code Owl — CI build
+#
+# Runs on every push to main and every pull request. Builds the multi-module
+# Maven project, runs tests, and uploads the fat jar as a workflow artifact
+# so PR reviewers can grab it and try it locally without setting up Maven.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build + test (Java ${{ matrix.java }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['17', '21']   # build with 17 + 21; runtime target is Java 8
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: Build (with tests)
+        run: mvn -B clean package
+
+      # Smoke test the fat jar — make sure it actually runs end-to-end.
+      - name: Smoke test the CLI
+        run: |
+          mkdir -p /tmp/smoke-output
+          java -jar analyzer-cli/target/analyzer-cli-*.jar . \
+            --output /tmp/smoke-output \
+            --no-git
+          test -f /tmp/smoke-output/analysis-report.html || (echo "HTML report missing"; exit 1)
+          echo "Smoke test OK — report size $(du -h /tmp/smoke-output/analysis-report.html | cut -f1)"
+
+      # Only upload the artifact from the primary (Java 17) build to avoid noise.
+      - name: Upload fat jar
+        if: matrix.java == '17'
+        uses: actions/upload-artifact@v4
+        with:
+          name: analyzer-cli-jar
+          path: analyzer-cli/target/analyzer-cli-*.jar
+          retention-days: 14

@@ -1,0 +1,111 @@
+# Code Owl — release on tag
+#
+# Triggered when a tag matching `v*.*.*` is pushed (e.g. v0.1.0, v1.2.3).
+# Builds the fat jar, creates a GitHub Release attached to the tag, and uploads
+# `analyzer-cli.jar` as a release asset.
+#
+# This is what makes the URL in our composite action.yml work:
+#   https://github.com/codebase-analyzer/core/releases/latest/download/analyzer-cli.jar
+#
+# How to cut a release:
+#   1. Bump version in pom.xml files (or use `mvn versions:set -DnewVersion=0.1.0`)
+#   2. Commit + push to main
+#   3. `git tag v0.1.0 && git push origin v0.1.0`
+#   4. This workflow runs automatically. Release appears at github.com/<org>/<repo>/releases
+#
+# Requires `contents: write` permission so the workflow can create the Release.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build + publish release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so we can include git log in release notes
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: Build (skip tests — assume CI on main already validated)
+        run: mvn -B clean package -DskipTests
+
+      # Rename to a stable filename so the composite action's release-asset URL
+      # works regardless of the project's internal version string.
+      - name: Stage release artifacts
+        run: |
+          mkdir -p release-staging
+          cp analyzer-cli/target/analyzer-cli-*.jar release-staging/analyzer-cli.jar
+          # Also keep a versioned copy for users who pin a specific release.
+          VERSION="${GITHUB_REF_NAME#v}"
+          cp analyzer-cli/target/analyzer-cli-*.jar "release-staging/analyzer-cli-${VERSION}.jar"
+          ls -la release-staging/
+
+      - name: Generate release notes from git log
+        id: notes
+        run: |
+          # Find the previous tag (if any) and produce a short changelog.
+          PREV_TAG=$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || echo "")
+          {
+            echo "## Code Owl ${GITHUB_REF_NAME}"
+            echo ""
+            if [ -n "$PREV_TAG" ]; then
+              echo "### Changes since ${PREV_TAG}"
+              echo ""
+              git log --pretty=format:"- %s (%h)" "${PREV_TAG}..${GITHUB_REF_NAME}" | head -50
+            else
+              echo "### Initial release"
+              echo ""
+              echo "First tagged release. See [README](README.md) for what's in the box."
+            fi
+            echo ""
+            echo ""
+            echo "### Install"
+            echo ""
+            echo "**Download the JAR directly:**"
+            echo "\`\`\`bash"
+            echo "curl -sSL -o analyzer.jar https://github.com/\${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/analyzer-cli.jar"
+            echo "java -jar analyzer.jar /path/to/your/project"
+            echo "\`\`\`"
+            echo ""
+            echo "**In GitHub Actions:** see [docs/integrations/github-actions/](https://github.com/\${{ github.repository }}/tree/${GITHUB_REF_NAME}/docs/integrations/github-actions)."
+            echo ""
+            echo "### Requirements"
+            echo ""
+            echo "- JRE 8 or later"
+          } > release-notes.md
+          echo "notes-file=release-notes.md" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Code Owl ${{ github.ref_name }}
+          body_path: release-notes.md
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}   # v1.0.0-rc1 → prerelease
+          files: |
+            release-staging/analyzer-cli.jar
+            release-staging/analyzer-cli-*.jar

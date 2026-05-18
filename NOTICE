@@ -1,0 +1,30 @@
+Code Owl (technical project name: codebase-analyzer)
+Copyright 2026 Code Owl contributors
+
+This product includes software developed at the Code Owl project
+(https://github.com/codebase-analyzer/core).
+
+------------------------------------------------------------------------------
+
+This product bundles or depends on third-party software listed below.
+
+  - JavaParser (Apache 2.0)
+      https://github.com/javaparser/javaparser
+
+  - Picocli (Apache 2.0)
+      https://github.com/remkop/picocli
+
+  - PMD (Apache 2.0 / BSD)
+      https://pmd.github.io/
+
+  - Gson (Apache 2.0)
+      https://github.com/google/gson
+
+  - SLF4J + Logback (MIT / EPL 1.0 / LGPL 2.1)
+      https://www.slf4j.org/
+
+  - Apache Maven Resolver (Apache 2.0)
+      https://maven.apache.org/resolver/
+
+See the source distribution and target/dependency-reduced-pom.xml for the
+full transitive dependency list and corresponding licenses.
