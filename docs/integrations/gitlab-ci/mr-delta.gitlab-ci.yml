@@ -1,0 +1,118 @@
+# Code Owl — Merge Request delta workflow
+#
+# On every merge request:
+#  1. Scan the TARGET BRANCH (e.g. main) at the MR's diff-base SHA
+#     and write a baseline snapshot
+#  2. Scan the MR branch with --baseline pointing at that snapshot
+#  3. Post a single MR comment with the delta ("this MR adds 3 critical findings"),
+#     updating it in-place on subsequent pushes
+#  4. Upload the MR-branch HTML report as a downloadable artifact
+#
+# Required setup (one-time per project):
+#   1. Create a project access token: Settings → Access Tokens → Create
+#      Name: codeowl, Role: Developer, Scopes: api
+#   2. Save it as a CI/CD variable: Settings → CI/CD → Variables → Add
+#      Key: CODEOWL_TOKEN, Value: <the token>, Masked: ✓, Protected: ✗
+#      (Unprotected so MR branches from forks can read it. If your MRs come
+#      only from same-project branches, mark it Protected.)
+#
+# Drop this content at .gitlab-ci.yml in your project (or include it from one).
+
+stages:
+  - analyze
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
+  CODEOWL_REF: "main"   # pin to a release tag like 'v0.1.0' once available
+  GIT_DEPTH: 0          # full history — Code Owl uses git churn for impact scoring
+
+codeowl-mr-delta:
+  stage: analyze
+  image: maven:3.9-eclipse-temurin-17
+
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-mvn
+    paths:
+      - .m2/repository/
+
+  before_script:
+    # apt-get isn't in the maven image's PATH by default for newer Debian-based
+    # images, but the default maven:eclipse-temurin image is Ubuntu/Debian based.
+    # `jq` is needed to parse the GitLab API JSON response when finding existing comments.
+    - apt-get update -qq && apt-get install -y --no-install-recommends -qq jq curl git
+    - git clone --depth 1 --branch "$CODEOWL_REF" https://github.com/codebase-analyzer/core.git /tmp/codeowl
+    - cd /tmp/codeowl && mvn -B clean package -DskipTests
+    - cp analyzer-cli/target/analyzer-cli-*.jar /tmp/analyzer.jar
+    - cd "$CI_PROJECT_DIR"
+
+  script:
+    # ── Step 1: scan the target branch (the MR's merge base) ───────────────
+    # CI_MERGE_REQUEST_DIFF_BASE_SHA is the commit the MR forks from. Scanning
+    # at that SHA gives us the "before" snapshot we compare against.
+    - mkdir -p .ca-mr
+    - git fetch --no-tags origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+    - git worktree add /tmp/base-branch "$CI_MERGE_REQUEST_DIFF_BASE_SHA"
+    - java -jar /tmp/analyzer.jar /tmp/base-branch
+        --write-baseline .ca-mr/baseline.json
+        --currency EUR
+    - git worktree remove /tmp/base-branch --force
+
+    # ── Step 2: scan the MR branch with the baseline ───────────────────────
+    - mkdir -p codeowl-output
+    - java -jar /tmp/analyzer.jar "$CI_PROJECT_DIR"
+        --output codeowl-output
+        --baseline .ca-mr/baseline.json
+        --markdown-summary .ca-mr/summary.md
+        --mode lead
+        --currency EUR
+
+    # ── Step 3: post / update the MR comment via GitLab API ────────────────
+    # Find-and-update pattern using a hidden HTML marker so we don't spam
+    # the MR with one comment per pipeline run.
+    - |
+      MARKER="<!-- codeowl-mr-comment -->"
+      # Read summary into a variable, prepend marker. Use single-quoted EOF in
+      # the heredoc-to-jq step so $-references inside the summary don't expand.
+      SUMMARY=$(cat .ca-mr/summary.md)
+      BODY=$(printf "%s\n\n%s" "$MARKER" "$SUMMARY")
+
+      API_BASE="$CI_API_V4_URL/projects/$CI_MERGE_REQUEST_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID/notes"
+
+      # Find an existing note that begins with our marker. We page through up
+      # to 100 notes — sufficient for any reasonable MR. Adjust per_page if needed.
+      EXISTING_ID=$(curl -sSf --header "PRIVATE-TOKEN: $CODEOWL_TOKEN" \
+        "$API_BASE?per_page=100" \
+        | jq -r --arg marker "$MARKER" \
+            '.[] | select(.body | startswith($marker)) | .id' | head -n1)
+
+      # jq -Rs produces a JSON-encoded string from stdin (handles newlines, quotes,
+      # etc.) which we use as the request body payload.
+      JSON_BODY=$(printf '%s' "$BODY" | jq -Rs '{body: .}')
+
+      if [ -n "$EXISTING_ID" ]; then
+        echo "Updating existing MR note #$EXISTING_ID"
+        curl -sSf --request PUT \
+          --header "PRIVATE-TOKEN: $CODEOWL_TOKEN" \
+          --header "Content-Type: application/json" \
+          --data "$JSON_BODY" \
+          "$API_BASE/$EXISTING_ID" > /dev/null
+      else
+        echo "Creating new MR note"
+        curl -sSf --request POST \
+          --header "PRIVATE-TOKEN: $CODEOWL_TOKEN" \
+          --header "Content-Type: application/json" \
+          --data "$JSON_BODY" \
+          "$API_BASE" > /dev/null
+      fi
+      echo "MR comment posted."
+
+  artifacts:
+    name: "codeowl-report-mr-${CI_MERGE_REQUEST_IID}"
+    paths:
+      - codeowl-output/analysis-report.html
+      - .ca-mr/summary.md
+    expire_in: 30 days
+    when: always
