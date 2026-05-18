@@ -153,6 +153,8 @@ public class HibernateEntityAnalyzer implements Analyzer {
             findings.add(new Finding(
                     Category.HIBERNATE_FETCH_STRATEGY,
                     Severity.HIGH,
+                    Finding.Confidence.HIGH,
+                    "hibernate.eager-collection",
                     "EAGER fetch on collection",
                     String.format("@%s on %s.%s uses FetchType.EAGER. Every query for %s loads the entire %s " +
                             "collection — even when it's never accessed.",
@@ -207,7 +209,8 @@ public class HibernateEntityAnalyzer implements Analyzer {
                             entity.getName(), entity.getName(),
                             rel.getAnnotationType(), rel.getTargetTypeName(), rel.getFieldName(),
                             rel.getAnnotationType(), rel.getTargetTypeName(), rel.getFieldName(),
-                            rel.getFieldName(), entity.getName())
+                            rel.getFieldName(), entity.getName()),
+                    java.util.Collections.<String>emptyList()
             ));
         } else if (!rel.hasBatchSize() && !rel.hasFetchAnnotation()) {
             findings.add(new Finding(
