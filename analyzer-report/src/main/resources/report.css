@@ -31,12 +31,13 @@ a:hover { color: #79c0ff; }
   display: flex; align-items: center; gap: 12px;
 }
 .sidebar-brand-icon {
-  width: 36px; height: 36px;
+  width: 40px; height: 40px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #1f6feb 0%, #8957e5 100%);
+  /* No background gradient — the inlined Code Owl logo carries its own dark backdrop. */
   display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 13px; color: #fff;
+  overflow: hidden;
 }
+.sidebar-brand-icon img { display: block; width: 40px; height: 40px; }
 .sidebar-brand-title { font-size: 14px; font-weight: 600; color: #e6edf3; }
 .sidebar-brand-sub { font-size: 11px; color: #6e7681; }
 .nav-menu { list-style: none; padding: 12px 0; margin: 0; flex: 1; }

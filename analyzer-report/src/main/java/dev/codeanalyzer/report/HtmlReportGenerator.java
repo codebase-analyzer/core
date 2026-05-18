@@ -146,7 +146,9 @@ public class HtmlReportGenerator {
 
         html.append("<nav class=\"sidebar\">\n");
         html.append("  <div class=\"sidebar-brand\">\n");
-        html.append("    <div class=\"sidebar-brand-icon\">&#x1F989;</div>\n");
+        html.append("    <div class=\"sidebar-brand-icon\"><img src=\"")
+            .append(LOGO_ICON_DATA_URI)
+            .append("\" alt=\"Code Owl\" width=\"40\" height=\"40\"/></div>\n");
         html.append("    <div class=\"sidebar-brand-text\">\n");
         html.append("      <div class=\"sidebar-brand-title\">Code Owl</div>\n");
         html.append("      <div class=\"sidebar-brand-sub\">v0.1.0</div>\n");
@@ -802,6 +804,9 @@ public class HtmlReportGenerator {
         html.append("<meta charset=\"UTF-8\">\n");
         html.append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n");
         html.append("<title>Code Owl Report</title>\n");
+        // Inline favicon — same 64×64 base64 PNG used for the sidebar brand.
+        // Keeps the report self-contained (no external requests).
+        html.append("<link rel=\"icon\" type=\"image/png\" href=\"").append(LOGO_ICON_DATA_URI).append("\">\n");
         html.append("<style>\n");
         html.append(CSS);
         html.append("</style>\n");
@@ -1683,6 +1688,12 @@ public class HtmlReportGenerator {
 
     private static final String CSS = loadResource("/report.css");
     private static final String JAVASCRIPT = loadResource("/report.js");
+    /**
+     * 64×64 Code Owl icon, base64-encoded. ~6 KB inline — used both for the
+     * sidebar brand spot and the document favicon. The full-size logo lives in
+     * the repo's /assets/ folder (used by README, not bundled in the report).
+     */
+    private static final String LOGO_ICON_DATA_URI = "data:image/png;base64," + loadResourceAsBase64("/logo-icon-64.png");
 
     private static String loadResource(String name) {
         try (java.io.InputStream in = HtmlReportGenerator.class.getResourceAsStream(name)) {
@@ -1694,6 +1705,22 @@ public class HtmlReportGenerator {
             int n;
             while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
             return out.toString(java.nio.charset.StandardCharsets.UTF_8.name());
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException("Failed to read resource: " + name, e);
+        }
+    }
+
+    /** Loads a binary classpath resource and returns it as a base64-encoded string. */
+    private static String loadResourceAsBase64(String name) {
+        try (java.io.InputStream in = HtmlReportGenerator.class.getResourceAsStream(name)) {
+            if (in == null) {
+                throw new IllegalStateException("Required resource not found on classpath: " + name);
+            }
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream(8 * 1024);
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+            return java.util.Base64.getEncoder().encodeToString(out.toByteArray());
         } catch (java.io.IOException e) {
             throw new IllegalStateException("Failed to read resource: " + name, e);
         }

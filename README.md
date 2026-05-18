@@ -1,9 +1,13 @@
-# 🦉 Code Owl
+<p align="center">
+  <img src="assets/logo.png" alt="Code Owl" width="420">
+</p>
 
-> **The codebase analyzer that sees what others miss.**
-> Specialist static analysis for legacy Java / Spring / Hibernate codebases —
-> migration blockers, fetch-strategy disasters, transaction propagation bugs,
-> package cycles, and the whole mess quantified in € (or $, £, ¥...).
+<p align="center">
+  <strong>The codebase analyzer that sees what others miss.</strong><br>
+  Specialist static analysis for legacy Java / Spring / Hibernate codebases —<br>
+  migration blockers, fetch-strategy disasters, transaction propagation bugs,<br>
+  package cycles, and the whole mess quantified in € (or $, £, ¥...).
+</p>
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Java 8+](https://img.shields.io/badge/Java-8%2B-orange.svg)](#requirements)
@@ -76,16 +80,14 @@ The HTML report has 8 pages and three audience modes (dev / lead / exec):
 
 ## CI / PR integration
 
-Drop one of three templates from [`docs/integrations/github-actions/`](docs/integrations/github-actions/)
-into your repo:
+Code Owl ships ready-to-use templates for both **GitHub Actions** and **GitLab CI**:
 
-| Template | Use when |
-|---|---|
-| `basic.yml` | You want scanned HTML uploaded as a workflow artifact on every PR |
-| `pr-delta.yml` | You want PRs to show *"this change adds 3 critical findings"* as a comment |
-| `action.yml` | You're publishing your own one-line Marketplace action |
+| Platform | Templates | What you get |
+|---|---|---|
+| [GitHub Actions](docs/integrations/github-actions/) | `basic.yml` · `pr-delta.yml` · `action.yml` | Scan on push/PR, upload HTML, post PR comments with trend deltas, optionally publish a one-line Marketplace action |
+| [GitLab CI](docs/integrations/gitlab-ci/) | `basic.gitlab-ci.yml` · `mr-delta.gitlab-ci.yml` | Scan on push/MR, upload HTML, post MR comments with trend deltas via REST API |
 
-See [the integration guide](docs/integrations/github-actions/README.md) for setup.
+See [`docs/integrations/`](docs/integrations/) for the full integration menu.
 
 ## Sample output (Markdown summary mode)
 
