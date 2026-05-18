@@ -1,0 +1,66 @@
+# Code Owl — Basic GitLab CI template
+#
+# Drop this content into your project's .gitlab-ci.yml (or include it from one).
+# On every push to the default branch + every merge request, this scans the
+# codebase and uploads the self-contained HTML report as a job artifact you
+# can download from the GitLab pipeline UI.
+#
+# Build approach: clones Code Owl from source and builds it inside the runner.
+# Adds ~2 min per run (Maven cache hits after the first run). Switch to a
+# release-download approach once Code Owl publishes a stable release on its
+# GitHub Releases page.
+#
+# Requires: a GitLab runner with internet access (to clone Code Owl from GitHub)
+# and the maven:3.9-eclipse-temurin-17 Docker image (or any Java 17 + Maven image).
+
+stages:
+  - analyze
+
+variables:
+  # Redirect Maven local cache into the project dir so GitLab's cache picks it up.
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
+  # Pin to a Code Owl version once releases exist (e.g. v0.1.0). 'main' tracks latest.
+  CODEOWL_REF: "main"
+
+codeowl-scan:
+  stage: analyze
+  image: maven:3.9-eclipse-temurin-17
+
+  # Cache the Maven local repository between runs (per-branch by default).
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-mvn
+    paths:
+      - .m2/repository/
+
+  # Trigger on default-branch pushes + merge requests. Adjust to taste.
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+  before_script:
+    # Clone + build Code Owl in the runner. ~2 min cold, ~30s with Maven cache hit.
+    - git clone --depth 1 --branch "$CODEOWL_REF" https://github.com/codebase-analyzer/core.git /tmp/codeowl
+    - cd /tmp/codeowl && mvn -B clean package -DskipTests
+    - cp analyzer-cli/target/analyzer-cli-*.jar /tmp/analyzer.jar
+    - cd "$CI_PROJECT_DIR"
+
+  script:
+    - mkdir -p codeowl-output
+    - java -jar /tmp/analyzer.jar "$CI_PROJECT_DIR"
+        --output codeowl-output
+        --mode lead
+        --currency EUR
+
+  artifacts:
+    name: "codeowl-report-${CI_COMMIT_REF_SLUG}-${CI_PIPELINE_IID}"
+    paths:
+      - codeowl-output/analysis-report.html
+    expire_in: 30 days
+    when: always
+    # GitLab auto-displays HTML artifacts via Pages — but only if the project has
+    # Pages enabled. Otherwise the report is downloadable from the job's artifacts
+    # tab.
+
+  # Optional: fail the pipeline when CRITICAL findings exist.
+  # Code Owl exits with code 2 in that case; uncomment the line below to enforce.
+  # allow_failure: false
