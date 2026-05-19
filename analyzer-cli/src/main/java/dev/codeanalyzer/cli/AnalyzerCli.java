@@ -1,6 +1,8 @@
 package dev.codeanalyzer.cli;
 
 import dev.codeanalyzer.core.AnalysisEngine;
+import dev.codeanalyzer.core.autofix.ApplyResult;
+import dev.codeanalyzer.core.autofix.AutoFixApplier;
 import dev.codeanalyzer.core.suppression.Baseline;
 import dev.codeanalyzer.core.analyzer.DeadBeanAnalyzer;
 import dev.codeanalyzer.core.analyzer.HibernateEntityAnalyzer;
@@ -73,6 +75,22 @@ public class AnalyzerCli implements Callable<Integer> {
 
     @Option(names = {"--markdown-summary"}, description = "Write a compact Markdown summary at the given path (for CI/PR-comment integration).")
     private String markdownSummaryPath;
+
+    @Option(names = {"--fix"},
+            description = "Apply auto-fix patches to disk. Creates .bak backups alongside each modified file. "
+                    + "By default only SAFE patches are applied; use --fix-confidence to widen.")
+    private boolean applyFixes = false;
+
+    @Option(names = {"--fix-preview"},
+            description = "Print fix patches as unified diffs to stdout without modifying any files. "
+                    + "Useful for reviewing what --fix would do.")
+    private boolean previewFixes = false;
+
+    @Option(names = {"--fix-confidence"},
+            description = "Minimum confidence threshold for --fix / --fix-preview: safe | moderate | all (default: safe). "
+                    + "'safe' = mechanical refactors only. 'moderate' = also include patches that may alter semantics. "
+                    + "'all' = include REVIEW_REQUIRED patches that should always be reviewed first.")
+    private String fixConfidence = "safe";
 
     @Override
     public Integer call() {
@@ -147,6 +165,18 @@ public class AnalyzerCli implements Callable<Integer> {
                 System.out.println("Markdown summary: " + mdFile);
             }
 
+            // Auto-fix: --fix-preview (print diffs, no IO) or --fix (apply to disk).
+            // The two are mutually exclusive — preview is precisely the read-only
+            // version of apply.
+            if (applyFixes && previewFixes) {
+                System.err.println("Error: --fix and --fix-preview are mutually exclusive. "
+                        + "Use --fix-preview to inspect, --fix to apply.");
+                return 1;
+            }
+            if (applyFixes || previewFixes) {
+                handleAutoFix(project, result);
+            }
+
             // Exit code based on severity
             if (result.countBySeverity(dev.codeanalyzer.core.model.Finding.Severity.CRITICAL) > 0) {
                 return 2;
@@ -157,6 +187,64 @@ public class AnalyzerCli implements Callable<Integer> {
             System.err.println("Analysis failed: " + e.getMessage());
             e.printStackTrace(System.err);
             return 1;
+        }
+    }
+
+    /**
+     * Orchestrates --fix and --fix-preview. The analyser's {@link AnalysisResult}
+     * already contains {@code availableFixes} (populated by {@code AutoFixEngine});
+     * here we apply or preview them under the user's confidence filter.
+     */
+    private void handleAutoFix(Path project, AnalysisResult result) {
+        AutoFixApplier.ConfidenceFilter filter;
+        try {
+            filter = AutoFixApplier.ConfidenceFilter.parse(fixConfidence);
+        } catch (IllegalArgumentException e) {
+            System.err.println("Error: " + e.getMessage());
+            return;
+        }
+
+        AutoFixApplier applier = new AutoFixApplier();
+        ApplyResult ar = previewFixes
+                ? applier.preview(result.getAvailableFixes(), filter, project, System.out)
+                : applier.apply(result.getAvailableFixes(), filter, project);
+
+        printFixSummary(ar, filter);
+    }
+
+    private void printFixSummary(ApplyResult ar, AutoFixApplier.ConfidenceFilter filter) {
+        String mode = ar.isPreviewOnly() ? "preview" : "apply";
+        String filterLabel;
+        switch (filter) {
+            case SAFE_ONLY:         filterLabel = "SAFE only";         break;
+            case SAFE_AND_MODERATE: filterLabel = "SAFE + MODERATE";   break;
+            case ALL:               filterLabel = "ALL confidences";   break;
+            default:                filterLabel = filter.name();
+        }
+        System.out.println();
+        System.out.println("Auto-fix " + mode + " (" + filterLabel + "):");
+        if (ar.isPreviewOnly()) {
+            System.out.println("  " + ar.getAppliedPatches() + " patches would be applied");
+        } else {
+            System.out.println("  " + ar.getAppliedPatches() + " patches applied across "
+                    + ar.getAppliedFiles() + " files (.bak backups created)");
+        }
+        if (ar.getSkippedByConfidence() > 0) {
+            System.out.println("  " + ar.getSkippedByConfidence()
+                    + " patches skipped: above confidence threshold (raise with --fix-confidence)");
+        }
+        if (ar.getSkippedByConflict() > 0) {
+            System.out.println("  " + ar.getSkippedByConflict()
+                    + " patches skipped: source file changed since scan");
+        }
+        if (ar.getFailedToWrite() > 0) {
+            System.out.println("  " + ar.getFailedToWrite() + " patches FAILED to write (see warnings)");
+        }
+        for (String w : ar.getWarnings()) {
+            System.out.println("  ! " + w);
+        }
+        if (!ar.isPreviewOnly() && ar.getAppliedPatches() > 0) {
+            System.out.println("  Tip: re-run without --fix to see remaining findings.");
         }
     }
 
