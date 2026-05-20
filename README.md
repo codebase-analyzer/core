@@ -46,6 +46,19 @@ mvn clean package -DskipTests
 java -jar analyzer-cli/target/analyzer-cli-*.jar /path/to/project
 ```
 
+**Want Code Owl to actually fix the findings, not just report them?**
+
+```bash
+# Preview every diff that would be applied — no files touched
+java -jar code-owl.jar /path/to/project --fix-preview
+
+# Apply the safe fixes — creates a .bak alongside each modified file
+java -jar code-owl.jar /path/to/project --fix
+
+# Also apply behaviour-changing fixes (EAGER->LAZY, empty-catch logging, etc.)
+java -jar code-owl.jar /path/to/project --fix --fix-confidence moderate
+```
+
 That's it. No server, no SaaS account, no telemetry. The HTML report is a single file you can email.
 
 ## What you get
@@ -85,6 +98,10 @@ The HTML report has 8 pages and three audience modes (dev / lead / exec):
 - **Trend tracking** — baseline mechanism shows "+12 critical / -€8k debt since last run." Works
   beautifully in CI for PR-level deltas.
 - **CVE scanning** — bundled curated database, no HTTP dependencies, works offline.
+- **Auto-fix patches** — every finding that has a mechanical fix ships with a unified diff in the
+  HTML report. `--fix-preview` prints all diffs to stdout; `--fix` applies them to disk with `.bak`
+  backups and conflict detection. Confidence tiers (`safe` / `moderate` / `all`) let you choose how
+  much trust to give the tool: from cosmetic safe-no-ops to behaviour-changing rewrites.
 
 ## CI / PR integration
 
@@ -133,7 +150,24 @@ java -jar analyzer-cli.jar <PROJECT_PATH> [options]
       --rate-per-hour <RATE>    Hourly rate for tech-debt cost (default: 100)
       --no-git                  Skip git churn (severity-only impact scoring)
       --git-window-months <N>   Months of git history to consider (default: 12)
+
+  Auto-fix (v0.2.0+):
+      --fix-preview             Print all available patches as unified diffs (read-only)
+      --fix                     Apply patches to disk. Creates .bak alongside each modified file.
+      --fix-confidence <T>      safe | moderate | all  (default: safe)
+                                  safe     = cosmetic mechanical fixes only (e.g. @Override)
+                                  moderate = also includes runtime-visible fixes (e.g. EAGER->LAZY)
+                                  all      = also includes REVIEW_REQUIRED fixes that change semantics
 ```
+
+Auto-fix safety mechanisms:
+
+- **Confidence-gated by default.** `--fix` applies only `safe` patches unless you raise the threshold.
+- **`.bak` backups** are written before any modification, restored on I/O failure.
+- **Conflict detection** — if a source file has changed since the analyser ran, the matching patch is
+  skipped (not silently mis-applied).
+- **Line-ending preservation** — CRLF files stay CRLF after the rewrite, so your next commit shows only
+  meaningful changes.
 
 ## How it compares
 
@@ -147,6 +181,7 @@ java -jar analyzer-cli.jar <PROJECT_PATH> [options]
 | Git-aware impact prioritization | ✅ | 💰 paid only | ❌ | ❌ | ❌ |
 | Self-contained HTML (no server) | ✅ | ❌ | ⚠️ | ⚠️ | ❌ |
 | Offline-safe CVE scanning | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Auto-fix with `--fix` apply mode (CLI, offline) | ✅ | ⚠️ IDE only | ❌ | ❌ | ❌ |
 
 **TL;DR:** Sonar wins on language coverage. Code Owl wins on Java/Spring/Hibernate depth and on "ship a single HTML you can email to the CTO."
 
